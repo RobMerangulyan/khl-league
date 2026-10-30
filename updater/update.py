@@ -111,6 +111,30 @@ def parse_standings(data: dict) -> list[dict]:
     return out
 
 
+def live_status(online: dict) -> str:
+    """English label for a game in progress, from khl.ru's Russian status text (e.g. '2-й период')."""
+    import re
+    ots = (online.get("ots") or "").upper()
+    if ots == "OT":
+        return "Overtime"
+    if ots == "SO":
+        return "Shootout"
+    text = str(online.get("status") or "").strip()
+    low = text.lower()
+    m = re.search(r"(\d)\s*-?\s*й\s*период", low)
+    if m:
+        return {"1": "1st period", "2": "2nd period", "3": "3rd period"}.get(m.group(1), f"Period {m.group(1)}")
+    if "перерыв" in low:
+        return "Intermission"
+    if "овертайм" in low:
+        return "Overtime"
+    if "буллит" in low:
+        return "Shootout"
+    if "заверш" in low or "окончен" in low:
+        return "Final, awaiting confirmation"
+    return text or "In progress"
+
+
 def parse_matches(data: dict) -> list[dict]:
     weeks = data.get("GAMES") or []
     out = []
@@ -132,6 +156,9 @@ def parse_matches(data: dict) -> list[dict]:
                 except ValueError:
                     pass
                 final = g.get("approved") == 1 and g.get("homeScore") is not None
+                # khl.ru marks games in progress with isOnline and puts the live score in "online".
+                online = g.get("online") if isinstance(g.get("online"), dict) else {}
+                live = (not final) and bool(g.get("isOnline")) and online.get("homeScore") is not None
                 ots = (g.get("ots") or "").upper()
                 out.append({
                     "id": int(g["id"]),
@@ -144,6 +171,10 @@ def parse_matches(data: dict) -> list[dict]:
                     "away_score": int(g["visitorScore"]) if final else None,
                     "result_type": (ots if ots in ("OT", "SO") else "R") if final else None,
                     "final": final,
+                    "live": live,
+                    "live_home": int(online["homeScore"]) if live else None,
+                    "live_away": int(online.get("visitorScore") or 0) if live else None,
+                    "live_status": live_status(online) if live else None,
                     "updated_at": now,
                 })
     if not out:
@@ -187,7 +218,8 @@ def main() -> None:
             fail(f"{rec['code']} shows fewer games than before ({rec['gp']} < {old[rec['code']]}); not saving.")
 
     # Only send matches that are new or changed, to keep live updates light.
-    fields = ("match_date", "time_msk", "kickoff", "home", "away", "home_score", "away_score", "result_type", "final")
+    fields = ("match_date", "time_msk", "kickoff", "home", "away", "home_score", "away_score", "result_type", "final",
+              "live", "live_home", "live_away", "live_status")
     existing = {r["id"]: r for r in db.select("matches", "select=id," + ",".join(fields))}
 
     def same(new: dict, old: dict | None) -> bool:
