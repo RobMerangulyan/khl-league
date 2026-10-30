@@ -43,7 +43,7 @@ header.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background
 .dot{width:8px;height:8px;border-radius:50%;background:var(--muted);display:inline-block}
 .dot.live{background:var(--red);box-shadow:0 0 0 0 var(--red);animation:pulse 2s infinite}
 @keyframes pulse{0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--red) 50%,transparent)}70%{box-shadow:0 0 0 7px transparent}100%{box-shadow:0 0 0 0 transparent}}
-@media (prefers-reduced-motion:reduce){.dot.live{animation:none}}
+@media (prefers-reduced-motion:reduce){.dot.live,.livedot{animation:none}}
 nav.tabs{display:flex;gap:4px;width:100%;overflow-x:auto}
 nav.tabs a{font-family:var(--display);font-weight:600;font-size:16px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);text-decoration:none;padding:10px 12px 9px;border-bottom:3px solid transparent;white-space:nowrap}
 nav.tabs a[aria-current="page"]{color:var(--ink);border-bottom-color:var(--red)}
@@ -154,6 +154,25 @@ label{font-size:13px;font-weight:600;color:var(--muted)}
 .owner{padding:14px 16px;display:grid;gap:10px}
 .kpi{display:grid;gap:2px;justify-items:end}
 .signin{padding:16px;display:grid;gap:12px}
+.lhead{font:700 15px var(--display);text-transform:uppercase;letter-spacing:.06em;display:flex;align-items:center;gap:8px}
+.games{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:10px}
+.game{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px;display:grid;gap:10px}
+.game.is-live{border-color:color-mix(in srgb,var(--red) 55%,var(--line))}
+.game.is-mine{box-shadow:inset 3px 0 0 var(--accent)}
+.gmain{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:10px}
+.gside{display:grid;justify-items:center;gap:6px;text-align:center;min-width:0}
+.gname{font-weight:600;font-size:13.5px;line-height:1.2}
+.gname.minec{color:var(--accent)}
+.gmid{display:grid;justify-items:center;gap:4px;min-width:84px}
+.gscore{font:700 34px var(--display);line-height:1;display:flex;gap:6px}
+.gscore span{color:var(--muted)}
+.gtime{font:700 26px var(--display);line-height:1}
+.gstat{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:6px;white-space:nowrap}
+.livebadge{font:700 11px var(--display);letter-spacing:.08em;color:#fff;background:var(--red);padding:2px 6px;border-radius:4px}
+.livedot{width:9px;height:9px;border-radius:50%;background:var(--red);display:inline-block;animation:pulse 2s infinite}
+.gfoot{display:flex;gap:8px;flex-wrap:wrap;border-top:1px solid var(--line);padding-top:8px}
+#liveTab.has-live{color:var(--red)}
+.livecount{font:700 11px var(--display);background:var(--red);color:#fff;border-radius:9px;padding:1px 6px;margin-left:2px;vertical-align:1px}
 body.season-mode .col-clubs,body.season-mode .league-kpi{display:none}
 .authform{display:grid;gap:10px;max-width:460px}
 .authform input{font:500 15px var(--body);padding:9px 12px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink);min-width:0;width:100%}
@@ -175,6 +194,7 @@ button.danger{color:var(--red);border-color:var(--red)}
     </div>
     <nav class="tabs" aria-label="Sections">
       <a href="#table" data-tab="table">League table</a>
+      <a href="#live" data-tab="live" id="liveTab">Live</a>
       <a href="#team" data-tab="team">My team</a>
       <a href="#khl" data-tab="khl">KHL standings</a>
       <a href="#rules" data-tab="rules">Rules</a>
@@ -197,6 +217,15 @@ button.danger{color:var(--red);border-color:var(--red)}
         <tbody id="leagueBody"><tr><td colspan="5" class="empty">Loading the league…</td></tr></tbody>
       </table>
     </div>
+  </section>
+
+  <!-- LIVE -->
+  <section data-view="live" hidden>
+    <div style="display:grid;gap:4px">
+      <h2>Live</h2>
+      <p class="sub" id="liveSub">Today's KHL games. Scores refresh by themselves every few minutes while games are on.</p>
+    </div>
+    <div id="liveWrap" style="display:grid;gap:18px"></div>
   </section>
 
   <!-- MY TEAM -->
@@ -328,7 +357,7 @@ function monoInner(code, sz){ const t=byCode[code]; const cls = sz===true?' sm':
 const mono = (code, sz) => `<button type="button" class="clubbtn" data-club="${code}" aria-label="${esc(byCode[code]?.name_en)}: last and next match">${monoInner(code,sz)}</button>`;
 
 /* ---------- routing ---------- */
-const VIEWS=["table","team","khl","rules"];
+const VIEWS=["table","live","team","khl","rules"];
 function route(){ const v = VIEWS.includes(location.hash.slice(1)) ? location.hash.slice(1) : "table";
   document.querySelectorAll("section[data-view]").forEach(s=>s.hidden = s.dataset.view!==v);
   document.querySelectorAll("nav.tabs a").forEach(a=>{ if(a.dataset.tab===v) a.setAttribute("aria-current","page"); else a.removeAttribute("aria-current"); }); }
@@ -544,6 +573,57 @@ function renderKhl(){
   $("khlTables").innerHTML = block("W","Western Conference") + block("E","Eastern Conference");
 }
 
+/* ---------- live tab ---------- */
+const mskDate = t => new Date(t + 3*3600e3).toISOString().slice(0,10);
+const isLiveNow = m => m.live && !m.final && Date.now() - kickoff(m).getTime() < 5*3600e3;   // ignore stale live flags
+function gameCard(m, kind, mine){
+  const side = (c, align) => `<div class="gside ${align}">${mono(c,'lg')}<span class="gname${mine.has(c)?' minec':''}">${esc(byCode[c]?.name_en)}</span></div>`;
+  const d = kickoff(m), time = d.toLocaleTimeString([], {hour:"2-digit", minute:"2-digit"});
+  let mid;
+  if(kind==="live") mid = `<div class="gscore">${m.live_home ?? 0}<span>:</span>${m.live_away ?? 0}</div>
+      <div class="gstat"><span class="livebadge">LIVE</span>${esc(m.live_status || "In progress")}</div>`;
+  else if(kind==="done") mid = `<div class="gscore">${m.home_score}<span>:</span>${m.away_score}</div>
+      <div class="gstat">${m.result_type==="OT" ? "Final · overtime" : m.result_type==="SO" ? "Final · shootout" : "Final"}</div>`;
+  else { const started = d.getTime() <= Date.now();
+    mid = `<div class="gtime">${time}</div><div class="gstat">${started ? "Starting · score soon" : esc(m.time_msk)+" Moscow"}</div>`; }
+  let foot = "";
+  const myClubs = [m.home, m.away].filter(c=>mine.has(c));
+  if(myClubs.length){
+    foot = `<div class="gfoot">` + myClubs.map(c=>{
+      if(kind==="done"){ const o = outcome(m, c); return `<span class="res ${o.win?'win':'loss'}"><i>+${o.pts}</i>${esc(byCode[c].name_en)} · your club</span>`; }
+      if(kind==="live"){ const f = m.home===c ? m.live_home : m.live_away, g = m.home===c ? m.live_away : m.live_home;
+        const state = f>g ? "winning" : f<g ? "losing" : "level"; return `<span class="res ${f>g?'win':f<g?'loss':''}"><i>${state}</i>${esc(byCode[c].name_en)} · your club</span>`; }
+      return `<span class="res"><i>yours</i>${esc(byCode[c].name_en)} plays</span>`;
+    }).join("") + `</div>`;
+  }
+  return `<div class="game${kind==='live'?' is-live':''}${myClubs.length?' is-mine':''}"><div class="gmain">${side(m.home,'l')}<div class="gmid">${mid}</div>${side(m.away,'r')}</div>${foot}</div>`;
+}
+function renderLive(){
+  const mine = new Set(me && saved ? saved.teams : []);
+  const today = mskDate(Date.now());
+  const byTime = (a,b) => kickoff(a) - kickoff(b);
+  const live = matches.filter(isLiveNow).sort(byTime);
+  const todays = matches.filter(m => m.match_date === today && !isLiveNow(m));
+  const upcoming = todays.filter(m => !m.final).sort(byTime);
+  const done = todays.filter(m => m.final).sort((a,b) => byTime(b,a));
+  $("liveTab").classList.toggle("has-live", live.length > 0);
+  $("liveTab").innerHTML = live.length ? `Live <span class="livecount">${live.length}</span>` : "Live";
+  const block = (title, list, kind, empty) => `<div style="display:grid;gap:10px"><div class="lhead">${title}${list.length?` <span class="note">${list.length}</span>`:""}</div>
+    ${list.length ? `<div class="games">${list.map(m=>gameCard(m, kind, mine)).join("")}</div>` : `<div class="note">${empty}</div>`}</div>`;
+  let html = "";
+  if(live.length) html += block('<span class="livedot"></span>Live now', live, "live", "");
+  html += block("Coming up today", upcoming, "next", live.length || done.length ? "No more games today." : "No games today.");
+  if(done.length) html += block("Finished today", done, "done", "");
+  if(!live.length && !upcoming.length){
+    const next = matches.filter(m => !m.final && m.match_date > today).sort(byTime);
+    if(next.length){ const day = next[0].match_date; const list = next.filter(m=>m.match_date===day);
+      const label = kickoff(list[0]).toLocaleDateString(undefined, {weekday:"long", day:"numeric", month:"long"});
+      html += block("Next game day · " + esc(label), list, "next", ""); }
+  }
+  $("liveWrap").innerHTML = html;
+}
+setInterval(()=>{ if(sb) renderLive(); }, 60000);   // move games from "coming up" to "starting" on time
+
 /* ---------- club card: last and next match ---------- */
 const kickoff = m => m.kickoff ? new Date(m.kickoff) : new Date(m.match_date+"T12:00:00+03:00");
 function outcome(m, code){ const home=m.home===code; const f=home?m.home_score:m.away_score, g=home?m.away_score:m.home_score; const win=f>g; const t=m.result_type;
@@ -595,7 +675,7 @@ async function loadTable(name){
     saved = me ? (squads[me.id]||null) : null; }
   if(name==="settings"){ const {data,error}=await sb.from("settings").select("*"); if(error) throw error; data.forEach(r=>settings[r.key]=r.value); }
 }
-function renderAll(){ renderStatus(); renderLeague(); renderTeam(); renderKhl(); if(openCode) openClub(openCode); }
+function renderAll(){ renderStatus(); renderLeague(); renderTeam(); renderKhl(); renderLive(); if(openCode) openClub(openCode); }
 
 async function boot(){
   route();
