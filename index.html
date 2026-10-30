@@ -367,7 +367,8 @@ function renderLeague(){
   if(!rows.length){ body.innerHTML = `<tr><td colspan="5" class="empty">No teams yet. Open <a href="#team">My team</a>, spend your coins and be the first on the table.</td></tr>`; return; }
   let lastPts=null, lastRank=0;
   body.innerHTML = rows.map((r,i)=>{
-    const rank = r.pts===lastPts ? lastRank : i+1; lastPts=r.pts; lastRank=rank;
+    const key = r.pts+"|"+r.clubs;   // tie on league points is broken by clubs total
+    const rank = key===lastPts ? lastRank : i+1; lastPts=key; lastRank=rank;
     const mine = me && r.doc.user_id===me.id;
     const chips = r.teams.map(c=>`<span class="chip" title="${esc(byCode[c]?.name_en)}: ${curFp(c)} pts this season">${mono(c,true)}<b>${curFp(c)}</b></span>`).join("");
     return `<tr class="${rank===1?'lead ':''}${mine?'me':''}">
