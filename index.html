@@ -154,6 +154,8 @@ label{font-size:13px;font-weight:600;color:var(--muted)}
 .owner{padding:14px 16px;display:grid;gap:10px}
 .kpi{display:grid;gap:2px;justify-items:end}
 .signin{padding:16px;display:grid;gap:12px}
+.authform{display:grid;gap:10px;max-width:460px}
+.authform input{font:500 15px var(--body);padding:9px 12px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink);min-width:0;width:100%}
 a.btn{text-decoration:none;display:inline-block}
 input[type=email]{font:500 15px var(--body);padding:9px 12px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink);min-width:0}
 button.danger{color:var(--red);border-color:var(--red)}
@@ -205,12 +207,22 @@ button.danger{color:var(--red);border-color:var(--red)}
 
     <div class="panel signin" id="signinPanel" hidden>
       <div style="display:grid;gap:4px">
-        <strong>Sign in to join the league</strong>
-        <span class="note">Enter your email and we'll send you a sign-in link. No password needed.</span>
+        <strong id="authTitle">Sign in to join the league</strong>
+        <span class="note" id="authNote">New here? Enter your email, choose a password, and tap Create account.</span>
       </div>
-      <form id="signinForm" class="row" novalidate>
-        <input type="email" id="email" placeholder="you@example.com" autocomplete="email" required style="flex:1 1 220px;width:auto">
-        <button type="submit" class="primary" id="signinBtn">Send sign-in link</button>
+      <form id="signinForm" class="authform" novalidate>
+        <input type="email" id="email" placeholder="Email" autocomplete="email" required>
+        <input type="password" id="password" placeholder="Password (at least 6 characters)" autocomplete="current-password" required>
+        <div class="row">
+          <button type="submit" class="primary" id="signinBtn">Sign in</button>
+          <button type="button" id="signupBtn">Create account</button>
+          <span class="spacer"></span>
+          <button type="button" class="linkish" id="forgotBtn" style="font-weight:500;color:var(--muted)">Forgot password?</button>
+        </div>
+      </form>
+      <form id="newPassForm" class="authform" novalidate hidden>
+        <input type="password" id="newPassword" placeholder="New password (at least 6 characters)" autocomplete="new-password" required>
+        <div class="row"><button type="submit" class="primary">Save new password</button></div>
       </form>
       <div id="signinMsg" hidden></div>
     </div>
@@ -371,7 +383,10 @@ function renderLeague(){
 const spent = list => list.reduce((s,c)=>s+(byCode[c]?.price||0),0);
 function renderTeam(){
   $("budgetText").textContent = budget(); document.querySelectorAll(".budgetVal").forEach(e=>e.textContent=budget());
-  $("signinPanel").hidden = !!me;
+  $("signinPanel").hidden = !!me && !recovering;
+  $("signinForm").hidden = recovering; $("newPassForm").hidden = !recovering;
+  $("authTitle").textContent = recovering ? "Set a new password" : "Sign in to join the league";
+  $("authNote").textContent = recovering ? "Choose a new password for your account." : "New here? Enter your email, choose a password, and tap Create account.";
   const left = budget() - spent(draft);
   $("coinsLeft").textContent = left; $("coinsLeft").style.color = left<0 ? "var(--red)" : "";
   $("meter").innerHTML = draft.map(c=>`<i style="width:${byCode[c].price/budget()*100}%" class="${left<0?'over':''}"></i>`).join("");
@@ -452,17 +467,51 @@ $("deleteBtn").addEventListener("click", async ()=>{
   renderTeam(); renderLeague();
 });
 
-/* ---------- sign in ---------- */
+/* ---------- sign in (email + password) ---------- */
+function authInput(){
+  const email=$("email").value.trim(), password=$("password").value;
+  if(!/^\S+@\S+\.\S+$/.test(email)){ showMsg("signinMsg","Enter a valid email address.","err"); return null; }
+  return {email, password};
+}
+function authError(err){
+  const m = (err && err.message) || "";
+  if(/invalid login/i.test(m)) return "Wrong email or password. New here? Tap Create account.";
+  if(/already registered|already been registered|exists/i.test(m)) return "This email already has an account. Tap Sign in instead.";
+  if(/not confirmed/i.test(m)) return "Confirm your email first using the link we sent, then sign in.";
+  if(/password/i.test(m) && /6|short|weak/i.test(m)) return "Choose a password with at least 6 characters.";
+  if(/rate|too many/i.test(m)) return "Too many attempts. Wait a few minutes and try again.";
+  return m || "Something went wrong. Try again.";
+}
+const busy = on => ["signinBtn","signupBtn","forgotBtn"].forEach(id=>$(id).disabled=on);
 $("signinForm").addEventListener("submit", async e=>{
-  e.preventDefault();
-  const email = $("email").value.trim();
-  if(!/^\S+@\S+\.\S+$/.test(email)){ showMsg("signinMsg","Enter a valid email address.","err"); return; }
-  $("signinBtn").disabled = true;
-  const {error} = await sb.auth.signInWithOtp({email, options:{emailRedirectTo: location.origin + location.pathname}});
-  $("signinBtn").disabled = false;
-  if(error) showMsg("signinMsg", error.message.includes("rate") ? "Too many sign-in emails were sent. Wait a few minutes and try again." : error.message, "err");
-  else showMsg("signinMsg", `Check ${email} and open the sign-in link. You can close this tab.`, "ok");
+  e.preventDefault(); const v=authInput(); if(!v) return;
+  if(!v.password){ showMsg("signinMsg","Enter your password.","err"); return; }
+  busy(true); const {error} = await sb.auth.signInWithPassword(v); busy(false);
+  if(error) showMsg("signinMsg", authError(error), "err"); else { $("signinMsg").hidden=true; $("password").value=""; }
 });
+$("signupBtn").addEventListener("click", async ()=>{
+  const v=authInput(); if(!v) return;
+  if(v.password.length<6){ showMsg("signinMsg","Choose a password with at least 6 characters.","err"); return; }
+  busy(true); const {data, error} = await sb.auth.signUp({...v, options:{emailRedirectTo: location.origin + location.pathname}}); busy(false);
+  if(error) showMsg("signinMsg", authError(error), "err");
+  else if(data && !data.session) showMsg("signinMsg", `Account created. Check ${v.email} for a confirmation link, then sign in here.`, "ok");
+  else { $("signinMsg").hidden=true; $("password").value=""; }
+});
+$("forgotBtn").addEventListener("click", async ()=>{
+  const email=$("email").value.trim();
+  if(!/^\S+@\S+\.\S+$/.test(email)){ showMsg("signinMsg","Type your email above first, then tap Forgot password.","err"); return; }
+  busy(true); const {error} = await sb.auth.resetPasswordForEmail(email, {redirectTo: location.origin + location.pathname}); busy(false);
+  if(error) showMsg("signinMsg", authError(error), "err");
+  else showMsg("signinMsg", `If ${email} has an account, a link to set a new password is on its way.`, "ok");
+});
+$("newPassForm").addEventListener("submit", async e=>{
+  e.preventDefault(); const pw=$("newPassword").value;
+  if(pw.length<6){ showMsg("signinMsg","Choose a password with at least 6 characters.","err"); return; }
+  const {error} = await sb.auth.updateUser({password: pw});
+  if(error) showMsg("signinMsg", authError(error), "err");
+  else { $("newPassForm").hidden=true; $("newPassword").value=""; recovering=false; showMsg("saveMsg","New password saved. You're signed in.","ok"); renderTeam(); }
+});
+let recovering = false;
 $("signOutBtn").addEventListener("click", ()=>sb.auth.signOut());
 function setUser(u){
   me = u || null;
@@ -561,7 +610,10 @@ async function boot(){
   try{ const d=JSON.parse(store.get("khl-draft")||"null"); if(d){ draft=(d.teams||[]).filter(c=>byCode[c]).slice(0,SIZE); $("squadName").value=d.name||""; } }catch(e){}
   const {data:{session}} = await sb.auth.getSession();
   setUser(session?.user);
-  sb.auth.onAuthStateChange((_e, s)=>{ if((s?.user?.id||null)!==(me?.id||null)){ setUser(s?.user); } });
+  sb.auth.onAuthStateChange((ev, s)=>{
+    if(ev==="PASSWORD_RECOVERY"){ recovering=true; location.hash="#team"; }
+    if((s?.user?.id||null)!==(me?.id||null)) setUser(s?.user); else renderTeam();
+  });
   renderAll();
 
   // live updates: reload a table whenever it changes
