@@ -638,7 +638,8 @@ function openClub(code){
   const t=byCode[code]; if(!t) return; openCode=code;
   const games = matches.filter(m=>m.home===code||m.away===code).sort((x,y)=>kickoff(x)-kickoff(y));
   const played = games.filter(m=>m.final); const last = played[played.length-1];
-  const next = games.find(m=>!m.final && kickoff(m).getTime() > Date.now() - 3*3600*1000);
+  const liveGame = games.find(isLiveNow);
+  const next = games.find(m=>!m.final && !isLiveNow(m) && m!==liveGame && kickoff(m).getTime() > Date.now() - 3*3600*1000);
   const fmt = (d,o) => d.toLocaleString(undefined,o);
   let html = `<div class="row" style="gap:12px;flex-wrap:nowrap">${monoInner(code,'lg')}
     <div style="min-width:0;flex:1"><h3 id="clubTitle">${esc(t.name_en)}</h3><div class="note">${esc(t.name_ru)}${t.city?' · '+esc(t.city):''}</div></div>
@@ -649,8 +650,13 @@ function openClub(code){
     html += `<div class="mcard"><div class="row"><span class="lbl">Last match</span><span class="spacer"></span><span class="note">${fmt(kickoff(last),{weekday:"short",day:"numeric",month:"short"})}</span></div>
       ${vsBlock(last,true)}<div class="res ${o.win?'win':'loss'}"><i>+${o.pts}</i>${o.label} · ${o.pts} league point${o.pts===1?'':'s'}</div></div>`;
   } else html += `<div class="mcard"><span class="lbl">Last match</span><span class="note">No result yet.</span></div>`;
+  if(liveGame){
+    html += `<div class="mcard" style="border-color:color-mix(in srgb,var(--red) 55%,var(--line))"><div class="row"><span class="lbl"><span class="livebadge">LIVE</span> Now playing</span><span class="spacer"></span><span class="note">${esc(liveGame.live_status||"In progress")}</span></div>
+      <div class="vs"><div class="side">${mono(liveGame.home)}<span>${esc(byCode[liveGame.home]?.name_en)}</span></div><div class="sc">${liveGame.live_home ?? 0} – ${liveGame.live_away ?? 0}</div><div class="side">${mono(liveGame.away)}<span>${esc(byCode[liveGame.away]?.name_en)}</span></div></div></div>`;
+  }
   if(next){
-    html += `<div class="mcard"><div class="row"><span class="lbl">Next match</span><span class="spacer"></span><span class="note">${next.home===code?'Home':'Away'}</span></div>
+    const started = kickoff(next).getTime() <= Date.now();
+    html += `<div class="mcard"><div class="row"><span class="lbl">${started ? "Started" : "Next match"}</span><span class="spacer"></span><span class="note">${next.home===code?'Home':'Away'}</span></div>
       ${vsBlock(next,false)}<div class="note" style="text-align:center"><strong style="color:var(--ink)">${fmt(kickoff(next),{weekday:"long",day:"numeric",month:"long",hour:"2-digit",minute:"2-digit"})}</strong> your time${next.time_msk?' · '+esc(next.time_msk)+' Moscow':''}</div></div>`;
   } else html += `<div class="mcard"><span class="lbl">Next match</span><span class="note">No upcoming match in the schedule.</span></div>`;
   const recent = played.slice(-5).reverse();
