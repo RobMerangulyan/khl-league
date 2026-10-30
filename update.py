@@ -111,26 +111,28 @@ def parse_standings(data: dict) -> list[dict]:
     return out
 
 
-def live_status(g: dict) -> str:
-    """Best-effort label for an in-progress game, e.g. '2nd period' or 'Overtime'."""
-    ots = (g.get("ots") or "").upper()
+def live_status(online: dict) -> str:
+    """English label for a game in progress, from khl.ru's Russian status text (e.g. '2-й период')."""
+    import re
+    ots = (online.get("ots") or "").upper()
     if ots == "OT":
         return "Overtime"
     if ots == "SO":
         return "Shootout"
-    for key in ("period_name", "periodName", "status_text", "statusText", "period", "currentPeriod", "status"):
-        val = g.get(key)
-        if val in (None, "", 0):
-            continue
-        if isinstance(val, int) or (isinstance(val, str) and val.isdigit()):
-            n = int(val)
-            return {1: "1st period", 2: "2nd period", 3: "3rd period", 4: "Overtime", 5: "Shootout"}.get(n, f"Period {n}")
-        return str(val)
-    periods = g.get("scP") or []
-    if periods:
-        n = len(periods)
-        return {1: "1st period", 2: "2nd period", 3: "3rd period"}.get(n, "Overtime")
-    return "In progress"
+    text = str(online.get("status") or "").strip()
+    low = text.lower()
+    m = re.search(r"(\d)\s*-?\s*й\s*период", low)
+    if m:
+        return {"1": "1st period", "2": "2nd period", "3": "3rd period"}.get(m.group(1), f"Period {m.group(1)}")
+    if "перерыв" in low:
+        return "Intermission"
+    if "овертайм" in low:
+        return "Overtime"
+    if "буллит" in low:
+        return "Shootout"
+    if "заверш" in low or "окончен" in low:
+        return "Final, awaiting confirmation"
+    return text or "In progress"
 
 
 def parse_matches(data: dict) -> list[dict]:
@@ -154,8 +156,9 @@ def parse_matches(data: dict) -> list[dict]:
                 except ValueError:
                     pass
                 final = g.get("approved") == 1 and g.get("homeScore") is not None
-                # A game with a score that is not yet approved is in progress.
-                live = (not final) and g.get("homeScore") is not None
+                # khl.ru marks games in progress with isOnline and puts the live score in "online".
+                online = g.get("online") if isinstance(g.get("online"), dict) else {}
+                live = (not final) and bool(g.get("isOnline")) and online.get("homeScore") is not None
                 ots = (g.get("ots") or "").upper()
                 out.append({
                     "id": int(g["id"]),
@@ -169,9 +172,9 @@ def parse_matches(data: dict) -> list[dict]:
                     "result_type": (ots if ots in ("OT", "SO") else "R") if final else None,
                     "final": final,
                     "live": live,
-                    "live_home": int(g["homeScore"]) if live else None,
-                    "live_away": int(g["visitorScore"]) if live and g.get("visitorScore") is not None else (0 if live else None),
-                    "live_status": live_status(g) if live else None,
+                    "live_home": int(online["homeScore"]) if live else None,
+                    "live_away": int(online.get("visitorScore") or 0) if live else None,
+                    "live_status": live_status(online) if live else None,
                     "updated_at": now,
                 })
     if not out:
