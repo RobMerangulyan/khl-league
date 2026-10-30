@@ -154,6 +154,7 @@ label{font-size:13px;font-weight:600;color:var(--muted)}
 .owner{padding:14px 16px;display:grid;gap:10px}
 .kpi{display:grid;gap:2px;justify-items:end}
 .signin{padding:16px;display:grid;gap:12px}
+body.season-mode .col-clubs,body.season-mode .league-kpi{display:none}
 .authform{display:grid;gap:10px;max-width:460px}
 .authform input{font:500 15px var(--body);padding:9px 12px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink);min-width:0;width:100%}
 a.btn{text-decoration:none;display:inline-block}
@@ -192,7 +193,7 @@ button.danger{color:var(--red);border-color:var(--red)}
     </div>
     <div class="panel tablewrap">
       <table>
-        <thead><tr><th>#</th><th>Manager</th><th>Clubs · points this season</th><th class="num" title="Season points of all four clubs right now">Clubs total</th><th class="num" id="ptsHead">League points</th></tr></thead>
+        <thead><tr><th>#</th><th>Manager</th><th>Clubs · points this season</th><th class="num col-clubs" title="Season points of all four clubs right now">Clubs total</th><th class="num" id="ptsHead">League points</th></tr></thead>
         <tbody id="leagueBody"><tr><td colspan="5" class="empty">Loading the league…</td></tr></tbody>
       </table>
     </div>
@@ -234,7 +235,7 @@ button.danger{color:var(--red);border-color:var(--red)}
           <input type="text" id="squadName" maxlength="40" placeholder="e.g. Yerevan Blue Line" autocomplete="off">
         </div>
         <div class="kpi"><span class="note">Your clubs' points now</span><span class="pts" id="teamNow">0</span></div>
-        <div class="kpi"><span class="note">Your league points</span><span class="pts" id="teamLeague" style="color:var(--accent)">0</span></div>
+        <div class="kpi league-kpi"><span class="note">Your league points</span><span class="pts" id="teamLeague" style="color:var(--accent)">0</span></div>
         <div class="kpi"><span class="note">Coins left</span><span class="coin" id="coinsLeft" style="font-size:28px">20</span></div>
       </div>
       <div class="meter" id="meter" aria-hidden="true"></div>
@@ -357,9 +358,10 @@ setInterval(renderStatus, 30000);
 
 /* ---------- league table ---------- */
 function renderLeague(){
-  $("ptsHead").textContent = settings.count_from==="season" ? "Season points" : "League points";
+  $("ptsHead").textContent = settings.count_from==="season" ? "Points" : "League points";
+  document.body.classList.toggle("season-mode", settings.count_from==="season");
   $("tableSub").textContent = settings.count_from==="season"
-    ? "Every club's points count from the start of the season. The table updates by itself when new KHL results arrive."
+    ? "Each manager's points are the season points of their four clubs, counted from the start of the season. The table updates by itself when new KHL results arrive."
     : "League points count from the moment each manager saved their four clubs. The table updates by itself when new KHL results arrive.";
   const rows = Object.values(squads).map(doc=>({doc,...squadPoints(doc)})).filter(r=>r.teams.length)
     .sort((a,b)=>b.pts-a.pts || b.clubs-a.clubs || String(a.doc.saved_at).localeCompare(String(b.doc.saved_at)));
@@ -375,7 +377,7 @@ function renderLeague(){
       <td class="rank">${rank}</td>
       <td><div class="mgr"><strong>${esc(r.doc.name)}${mine?' · you':''}</strong></div></td>
       <td><div class="chips">${chips}</div></td>
-      <td class="num"><span class="fp">${r.clubs}</span></td>
+      <td class="num col-clubs"><span class="fp">${r.clubs}</span></td>
       <td class="num"><span class="pts">${r.pts}</span></td></tr>`;
   }).join("");
 }
