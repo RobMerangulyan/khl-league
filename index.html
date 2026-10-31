@@ -265,11 +265,6 @@ button.danger{color:var(--red);border-color:var(--red)}
     </div>
     <div class="leaguebar">
       <div class="filters" id="scopeChips" aria-label="Which league"></div>
-      <div class="seg" id="periodSeg">
-        <button type="button" data-period="season" aria-pressed="true">Season</button>
-        <button type="button" data-period="week" aria-pressed="false">This week</button>
-        <button type="button" data-period="history" aria-pressed="false">Weekly winners</button>
-      </div>
     </div>
     <div class="panel leaguepanel" id="leagueInfo" hidden></div>
     <div class="panel leaguepanel" id="leagueForms" hidden>
@@ -394,8 +389,7 @@ button.danger{color:var(--red);border-color:var(--red)}
       <p><strong>When points count.</strong> By default your clubs score for every game they play after you save your team. The organiser can switch the league to count each club's points from the start of the season.</p>
       <p><strong>Transfers.</strong> You can sell and buy clubs at any time. Points your old clubs earned for you stay on your total. A new club starts scoring from the moment you save.</p>
       <p><strong>Results.</strong> Results come from the official KHL site. During game hours they refresh about every minute.</p>
-      <p><strong>Weekly winner.</strong> Each week runs Monday to Sunday, Moscow time. When a game ends, every manager who owns one of its clubs at that moment gets that club's points for the week. The manager with the most points that week is Manager of the week.</p>
-      <p><strong>Private leagues.</strong> On the League table, tap <b>+ New / join</b> to create a league for your friends and share its code or invite link. A league table shows only its members, for the season, this week, and past weekly winners. You can be in several leagues.</p>
+      <p><strong>Private leagues.</strong> On the League table, tap <b>+ New / join</b> to create a league for your friends and share its code or invite link. A league table shows only its members. You can be in several leagues.</p>
       <p><strong>App.</strong> Add the site to your home screen to use it like an app: on Android or a computer, tap <b>Install</b> when the site offers it; on iPhone, open it in Safari, tap <b>Share</b>, then <b>Add to Home Screen</b>.</p>
     </div>
   </section>
@@ -479,7 +473,7 @@ const TROPHY = '<svg class="trophy" viewBox="0 0 24 24" fill="currentColor" aria
 /* ---------- private leagues ---------- */
 let myLeagues = [], leagueMembers = {}, weekly = [], weekLog = [];
 let scope = store.get("khl-scope") || "all";
-let period = store.get("khl-period") || "season";
+const period = "season";   // weekly views removed
 let showForms = false, leaveArmed = null;
 let pendingJoin = (()=>{ try{ return localStorage.getItem("khl-join") || null; }catch(e){ return null; } })();
 const inScope = uid => scope==="all" || !!(leagueMembers[scope] && leagueMembers[scope].has(uid));
@@ -523,8 +517,6 @@ document.addEventListener("click", e=>{
   if(e.target.closest("#addLeagueChip")){ showForms = !showForms; $("leagueMsg").hidden=true;
     if(showForms && !me) showMsg("leagueMsg","Sign in on My team first, then come back here to create or join a league.","");
     renderLeague(); return; }
-  const p = e.target.closest("[data-period]");
-  if(p){ period = p.dataset.period; store.set("khl-period", period); renderLeague(); }
 });
 async function afterLeagueChange(l, verb){
   showForms=false; scope=l.id; store.set("khl-scope", scope);
@@ -555,7 +547,8 @@ async function handlePendingJoin(){
 }
 
 /* ---------- league table ---------- */
-function renderMotw(){
+function renderMotw(){ $("motw").hidden = true; }
+function renderMotwUnused(){
   const cur = weekStartOf(Date.now());
   const weeks = [...new Set(weekly.map(r=>r.week_start))].filter(w=>w<cur).sort().reverse();
   for(const w of weeks){
@@ -942,7 +935,7 @@ async function boot(){
   if(jc && /^[A-Za-z0-9]{6}$/.test(jc)){ pendingJoin = jc.toUpperCase(); try{ localStorage.setItem("khl-join", pendingJoin); }catch(e){}
     try{ history.replaceState(null, "", location.pathname + "#table"); }catch(e){} location.hash = "#table"; }
   try{
-    await Promise.all(["clubs","standings","matches","squads","settings","weekly"].map(loadTable));
+    await Promise.all(["clubs","standings","matches","squads","settings"].map(loadTable));
   }catch(err){
     showMsg("setupMsg","Could not load the league data. Check that you ran supabase/schema.sql and that config.js has the right keys. ("+(err.message||err)+")","err");
     return;
@@ -966,7 +959,6 @@ async function boot(){
     .on("postgres_changes",{event:"*",schema:"public",table:"standings"},reload("standings"))
     .on("postgres_changes",{event:"*",schema:"public",table:"matches"},reload("matches"))
     .on("postgres_changes",{event:"*",schema:"public",table:"settings"},reload("settings"))
-    .on("postgres_changes",{event:"*",schema:"public",table:"points_log"},reload("weekly"))
     .on("postgres_changes",{event:"*",schema:"public",table:"league_members"},reload("leagues"))
     .subscribe();
 }
