@@ -5,6 +5,14 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>KHL League</title>
 <meta name="description" content="KHL fantasy league: buy 4 clubs with 20 coins and score from real KHL results.">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#12305f">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="KHL League">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Saira+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&display=swap">
@@ -171,6 +179,45 @@ body{background:transparent}
 body::after{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;
   background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 2000 850'%3E%3Cg fill='none' opacity='0.4'%3E %3Crect x='12' y='12' width='1976' height='826' rx='280' stroke='%237f97aa' stroke-width='8'/%3E %3Cline x1='110' y1='60' x2='110' y2='790' stroke='%23c8102e' stroke-width='5'/%3E%3Cline x1='1890' y1='60' x2='1890' y2='790' stroke='%23c8102e' stroke-width='5'/%3E %3Cline x1='750' y1='12' x2='750' y2='838' stroke='%231d4fa3' stroke-width='16'/%3E%3Cline x1='1250' y1='12' x2='1250' y2='838' stroke='%231d4fa3' stroke-width='16'/%3E %3Cline x1='1000' y1='12' x2='1000' y2='838' stroke='%23c8102e' stroke-width='14' stroke-dasharray='40 14'/%3E %3Ccircle cx='1000' cy='425' r='150' stroke='%231d4fa3' stroke-width='5'/%3E%3Ccircle cx='1000' cy='425' r='9' fill='%231d4fa3'/%3E %3Cg stroke='%23c8102e' stroke-width='5'%3E%3Ccircle cx='310' cy='205' r='150'/%3E%3Ccircle cx='310' cy='645' r='150'/%3E%3Ccircle cx='1690' cy='205' r='150'/%3E%3Ccircle cx='1690' cy='645' r='150'/%3E%3C/g%3E %3Cg fill='%23c8102e'%3E%3Ccircle cx='310' cy='205' r='12'/%3E%3Ccircle cx='310' cy='645' r='12'/%3E%3Ccircle cx='1690' cy='205' r='12'/%3E%3Ccircle cx='1690' cy='645' r='12'/%3E %3Ccircle cx='800' cy='205' r='12'/%3E%3Ccircle cx='800' cy='645' r='12'/%3E%3Ccircle cx='1200' cy='205' r='12'/%3E%3Ccircle cx='1200' cy='645' r='12'/%3E%3C/g%3E %3Cpath d='M110 365 A60 60 0 0 1 110 485 Z' fill='%231d4fa3' fill-opacity='0.5' stroke='%23c8102e' stroke-width='4'/%3E %3Cpath d='M1890 365 A60 60 0 0 0 1890 485 Z' fill='%231d4fa3' fill-opacity='0.5' stroke='%23c8102e' stroke-width='4'/%3E %3Crect x='80' y='395' width='30' height='60' stroke='%23c8102e' stroke-width='4'/%3E%3Crect x='1890' y='395' width='30' height='60' stroke='%23c8102e' stroke-width='4'/%3E %3C/g%3E%3C/svg%3E"),linear-gradient(var(--veil),var(--veil)),url("background.jpg");
   background-size:min(1700px,170vw) auto,cover,cover;background-position:center 58%,center,center;background-repeat:no-repeat}
+.show-sm{display:none}
+@media (max-width:600px){.hide-sm{display:none}.show-sm{display:inline}}
+.installbar{display:flex;flex-wrap:wrap;align-items:center;gap:12px;padding:12px 14px;background:var(--surface);border:1px solid var(--line);border-radius:12px}
+.installbar img{border-radius:10px;flex:none}
+.motw{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:12px 16px;background:var(--surface);border:1px solid var(--line);border-radius:12px;box-shadow:inset 4px 0 0 var(--coin)}
+.motw .trophy{width:34px;height:34px;flex:none;color:var(--coin)}
+.motw .who{font:700 20px var(--display);text-transform:uppercase;letter-spacing:.02em;line-height:1.1}
+.leaguebar{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px}
+.filters button.addchip{border-style:dashed}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:9px;overflow:hidden;background:var(--surface)}
+.seg button{border:0;border-radius:0;padding:7px 12px;font-size:13px;background:transparent}
+.seg button+button{border-left:1px solid var(--line)}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--surface)}
+.leaguepanel{padding:14px 16px;display:grid;gap:14px}
+.leaguepanel .lf{display:grid;gap:6px}
+.codebox{font:700 22px var(--display);letter-spacing:.2em;padding:4px 12px;border:1.5px dashed var(--line);border-radius:8px;background:var(--surface-2);user-select:all}
+.invitelink{font-size:13px;color:var(--muted);word-break:break-all;user-select:all}
+.weekcard{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px 16px;display:grid;gap:8px}
+.weekcard .wk{font:600 12px var(--body);text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
+.weekcard .win{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.weekcard .win svg{width:22px;height:22px;color:var(--coin);flex:none}
+.weekcard .win strong{font:700 20px var(--display);text-transform:uppercase}
+.weekcard .rest{font-size:13.5px;color:var(--muted)}
+.winsrow{display:flex;gap:8px;flex-wrap:wrap}
+.winsrow span{background:var(--surface);border:1px solid var(--line);border-radius:999px;padding:4px 10px;font-weight:600;font-size:13px}
+.winsrow b{color:var(--coin);font-family:var(--display);font-size:15px}
+@media (max-width:600px){
+  #tableWrap th,#tableWrap td{padding:9px 6px}
+  #tableWrap th:first-child,#tableWrap td:first-child{padding-left:12px}
+  #tableWrap th:last-child,#tableWrap td:last-child{padding-right:12px}
+  #tableWrap .rank{width:28px;font-size:18px}
+  #tableWrap .chips{gap:2px}
+  #tableWrap .chip{min-width:27px}
+  #tableWrap .logo.sm{width:24px;height:24px;padding:2px}
+  #tableWrap .chip b{font-size:12px}
+  #tableWrap .pts{font-size:22px}
+  #tableWrap th{font-size:11px;letter-spacing:.04em}
+  #tableWrap .mgr strong{font-size:14px;word-break:break-word}
+}
 body.season-mode .col-clubs,body.season-mode .league-kpi{display:none}
 .authform{display:grid;gap:10px;max-width:460px}
 .authform input{font:500 15px var(--body);padding:9px 12px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink);min-width:0;width:100%}
@@ -205,13 +252,48 @@ button.danger{color:var(--red);border-color:var(--red)}
 
   <!-- LEAGUE TABLE -->
   <section data-view="table">
+    <div class="installbar" id="installBar" hidden>
+      <img src="icon-192.png" alt="" width="44" height="44">
+      <div style="display:grid;gap:2px;min-width:0;flex:1 1 200px"><strong>Get the KHL League app</strong><span class="note" id="installNote">Add it to your home screen for one-tap access.</span></div>
+      <button type="button" class="primary" id="installBtn" hidden>Install</button>
+      <button type="button" id="installClose">Not now</button>
+    </div>
+    <div class="motw" id="motw" hidden></div>
     <div class="plate" style="display:grid;gap:4px;min-width:0">
-      <h2>League table</h2>
+      <h2 id="tableTitle">League table</h2>
       <p class="sub" id="tableSub">League points count from the moment each manager saved their four clubs. The table updates by itself when new KHL results arrive.</p>
     </div>
-    <div class="panel tablewrap">
+    <div class="leaguebar">
+      <div class="filters" id="scopeChips" aria-label="Which league"></div>
+      <div class="seg" id="periodSeg">
+        <button type="button" data-period="season" aria-pressed="true">Season</button>
+        <button type="button" data-period="week" aria-pressed="false">This week</button>
+        <button type="button" data-period="history" aria-pressed="false">Weekly winners</button>
+      </div>
+    </div>
+    <div class="panel leaguepanel" id="leagueInfo" hidden></div>
+    <div class="panel leaguepanel" id="leagueForms" hidden>
+      <div class="lf">
+        <strong>Create a private league</strong>
+        <span class="note">You get a 6-letter code to share. Only people with the code can see and join it.</span>
+        <form id="createLeagueForm" class="row" novalidate>
+          <input type="text" id="newLeagueName" maxlength="40" placeholder="League name, e.g. AUA friends" autocomplete="off" style="flex:1 1 220px;width:auto">
+          <button type="submit" class="primary" id="createLeagueBtn">Create league</button>
+        </form>
+      </div>
+      <div class="lf">
+        <strong>Join a league</strong>
+        <form id="joinLeagueForm" class="row" novalidate>
+          <input type="text" id="joinCode" maxlength="6" placeholder="6-letter code" autocomplete="off" autocapitalize="characters" style="flex:0 1 180px;width:auto;text-transform:uppercase;letter-spacing:.12em">
+          <button type="submit" class="primary" id="joinLeagueBtn">Join</button>
+        </form>
+      </div>
+      <div id="leagueMsg" hidden></div>
+    </div>
+    <div id="historyWrap" style="display:grid;gap:12px" hidden></div>
+    <div class="panel tablewrap" id="tableWrap">
       <table>
-        <thead><tr><th>#</th><th>Manager</th><th>Clubs · points this season</th><th class="num col-clubs" title="Season points of all four clubs right now">Clubs total</th><th class="num" id="ptsHead">League points</th></tr></thead>
+        <thead><tr><th>#</th><th>Manager</th><th><span class="hide-sm">Clubs · points this season</span><span class="show-sm">Clubs</span></th><th class="num col-clubs" title="Season points of all four clubs right now">Clubs total</th><th class="num" id="ptsHead">League points</th></tr></thead>
         <tbody id="leagueBody"><tr><td colspan="5" class="empty">Loading the league…</td></tr></tbody>
       </table>
     </div>
@@ -311,7 +393,10 @@ button.danger{color:var(--red);border-color:var(--red)}
       <p><strong>Budget.</strong> Every manager has <span class="budgetVal">20</span> coins and must own exactly 4 clubs. Club prices run from 1 to 10 coins.</p>
       <p><strong>When points count.</strong> By default your clubs score for every game they play after you save your team. The organiser can switch the league to count each club's points from the start of the season.</p>
       <p><strong>Transfers.</strong> You can sell and buy clubs at any time. Points your old clubs earned for you stay on your total. A new club starts scoring from the moment you save.</p>
-      <p><strong>Results.</strong> Results come from the official KHL site and are updated automatically every hour.</p>
+      <p><strong>Results.</strong> Results come from the official KHL site. During game hours they refresh about every minute.</p>
+      <p><strong>Weekly winner.</strong> Each week runs Monday to Sunday, Moscow time. When a game ends, every manager who owns one of its clubs at that moment gets that club's points for the week. The manager with the most points that week is Manager of the week.</p>
+      <p><strong>Private leagues.</strong> On the League table, tap <b>+ New / join</b> to create a league for your friends and share its code or invite link. A league table shows only its members, for the season, this week, and past weekly winners. You can be in several leagues.</p>
+      <p><strong>App.</strong> Add the site to your home screen to use it like an app: on Android or a computer, tap <b>Install</b> when the site offers it; on iPhone, open it in Safari, tap <b>Share</b>, then <b>Add to Home Screen</b>.</p>
     </div>
   </section>
 </main>
@@ -383,17 +468,143 @@ function renderStatus(){ const t=lastUpdate();
   $("statusText").textContent = (fresh?"Live · ":"") + "KHL results updated " + ago(t); }
 setInterval(renderStatus, 30000);
 
+/* ---------- weeks (Monday to Sunday, Moscow time) ---------- */
+const DAY = 86400e3;
+function weekStartOf(t){ const m = new Date(t + 3*3600e3); const dow = (m.getUTCDay()+6)%7;
+  return new Date(Date.UTC(m.getUTCFullYear(), m.getUTCMonth(), m.getUTCDate()-dow)).toISOString().slice(0,10); }
+function weekLabel(ws){ const a = new Date(ws+"T00:00:00Z"), b = new Date(a.getTime()+6*DAY);
+  const f = d => d.toLocaleDateString(undefined, {day:"numeric", month:"short", timeZone:"UTC"}); return f(a)+" – "+f(b); }
+const TROPHY = '<svg class="trophy" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 3h10v2h3v3a4 4 0 0 1-4 4h-.3A5 5 0 0 1 13 14.9V17h3v2H8v-2h3v-2.1A5 5 0 0 1 8.3 12H8a4 4 0 0 1-4-4V5h3V3zm0 4H6v1a2 2 0 0 0 1.2 1.8A5 5 0 0 1 7 8.5V7zm10 0v1.5c0 .4 0 .9-.2 1.3A2 2 0 0 0 18 8V7h-1z"/></svg>';
+
+/* ---------- private leagues ---------- */
+let myLeagues = [], leagueMembers = {}, weekly = [], weekLog = [];
+let scope = store.get("khl-scope") || "all";
+let period = store.get("khl-period") || "season";
+let showForms = false, leaveArmed = null;
+let pendingJoin = (()=>{ try{ return localStorage.getItem("khl-join") || null; }catch(e){ return null; } })();
+const inScope = uid => scope==="all" || !!(leagueMembers[scope] && leagueMembers[scope].has(uid));
+const nameOf = uid => squads[uid]?.name || null;
+function renderScope(){
+  if(scope!=="all" && !myLeagues.some(l=>l.id===scope)) scope = "all";
+  const chip = (id, label) => `<button type="button" data-scope="${id}" aria-pressed="${scope===id}">${esc(label)}</button>`;
+  $("scopeChips").innerHTML = chip("all","Everyone") + myLeagues.map(l=>chip(l.id, l.name)).join("")
+    + `<button type="button" class="addchip" id="addLeagueChip" aria-pressed="${showForms}">+ New / join</button>`;
+  document.querySelectorAll("#periodSeg button").forEach(b=>b.setAttribute("aria-pressed", String(b.dataset.period===period)));
+  $("leagueForms").hidden = !showForms;
+  const l = myLeagues.find(x=>x.id===scope);
+  if(!l){ $("leagueInfo").hidden = true; return; }
+  const link = location.origin + location.pathname + "?join=" + l.code;
+  const n = leagueMembers[l.id] ? leagueMembers[l.id].size : 1;
+  $("leagueInfo").hidden = false;
+  $("leagueInfo").innerHTML = `<div class="row" style="gap:12px"><div style="display:grid;gap:2px;min-width:0;flex:1 1 200px"><strong style="font:700 20px var(--display);text-transform:uppercase">${esc(l.name)}</strong>
+      <span class="note">${n} member${n===1?'':'s'} · private league</span></div>
+      <div class="row" style="gap:8px"><span class="note">Invite code</span><span class="codebox">${esc(l.code)}</span></div></div>
+    <div class="row" style="gap:8px"><button type="button" class="primary" id="copyInvite">Copy invite link</button>
+      <span class="invitelink" id="inviteLink">${esc(link)}</span><span class="spacer"></span>
+      <button type="button" id="leaveLeague">Leave league</button></div>
+    <div id="inviteMsg" hidden></div>`;
+  $("copyInvite").addEventListener("click", async ()=>{
+    try{ await navigator.clipboard.writeText(link); showMsg("inviteMsg","Invite link copied. Send it to your friends.","ok"); }
+    catch(e){ const r=document.createRange(); r.selectNodeContents($("inviteLink")); const s=getSelection(); s.removeAllRanges(); s.addRange(r);
+      showMsg("inviteMsg","The link is selected. Copy it and send it to your friends.",""); }
+  });
+  $("leaveLeague").addEventListener("click", async e=>{
+    const b = e.currentTarget;
+    if(!leaveArmed){ b.textContent="Tap again to leave"; b.classList.add("danger"); leaveArmed=setTimeout(()=>{ leaveArmed=null; b.textContent="Leave league"; b.classList.remove("danger"); },4000); return; }
+    clearTimeout(leaveArmed); leaveArmed=null; b.disabled=true;
+    const {error} = await sb.rpc("leave_league", {p_league: l.id});
+    if(error){ b.disabled=false; showMsg("inviteMsg", error.message, "err"); return; }
+    scope="all"; store.set("khl-scope","all"); await loadTable("leagues"); renderLeague();
+  });
+}
+document.addEventListener("click", e=>{
+  const s = e.target.closest("[data-scope]");
+  if(s){ scope = s.dataset.scope; store.set("khl-scope", scope); showForms=false; renderLeague(); return; }
+  if(e.target.closest("#addLeagueChip")){ showForms = !showForms; $("leagueMsg").hidden=true;
+    if(showForms && !me) showMsg("leagueMsg","Sign in on My team first, then come back here to create or join a league.","");
+    renderLeague(); return; }
+  const p = e.target.closest("[data-period]");
+  if(p){ period = p.dataset.period; store.set("khl-period", period); renderLeague(); }
+});
+async function afterLeagueChange(l, verb){
+  showForms=false; scope=l.id; store.set("khl-scope", scope);
+  await loadTable("leagues"); renderLeague();
+  if(document.getElementById("inviteMsg")) showMsg("inviteMsg", verb==="created" ? `League created. Share the code ${l.code} or the invite link with your friends.` : `You joined ${l.name}.`, "ok");
+}
+$("createLeagueForm").addEventListener("submit", async e=>{
+  e.preventDefault(); if(!me){ showMsg("leagueMsg","Sign in on My team first.","err"); return; }
+  const name=$("newLeagueName").value.trim(); if(!name){ showMsg("leagueMsg","Give the league a name.","err"); return; }
+  $("createLeagueBtn").disabled=true; const {data,error}=await sb.rpc("create_league",{p_name:name}); $("createLeagueBtn").disabled=false;
+  if(error){ showMsg("leagueMsg", error.message, "err"); return; }
+  $("newLeagueName").value=""; afterLeagueChange(data, "created");
+});
+$("joinLeagueForm").addEventListener("submit", async e=>{
+  e.preventDefault(); if(!me){ showMsg("leagueMsg","Sign in on My team first.","err"); return; }
+  const code=$("joinCode").value.trim().toUpperCase(); if(code.length!==6){ showMsg("leagueMsg","Codes have 6 letters and numbers.","err"); return; }
+  $("joinLeagueBtn").disabled=true; const {data,error}=await sb.rpc("join_league",{p_code:code}); $("joinLeagueBtn").disabled=false;
+  if(error){ showMsg("leagueMsg", error.message, "err"); return; }
+  $("joinCode").value=""; afterLeagueChange(data, "joined");
+});
+async function handlePendingJoin(){
+  if(!pendingJoin) return;
+  if(!me){ showForms=true; $("joinCode").value=pendingJoin; showMsg("leagueMsg","You were invited to a private league. Sign in on My team, then tap Join.",""); renderScope(); return; }
+  const code = pendingJoin; pendingJoin=null; try{ localStorage.removeItem("khl-join"); }catch(e){}
+  const {data,error} = await sb.rpc("join_league",{p_code:code});
+  if(error){ showForms=true; $("joinCode").value=code; showMsg("leagueMsg", error.message, "err"); renderScope(); return; }
+  location.hash = "#table"; afterLeagueChange(data, "joined");
+}
+
 /* ---------- league table ---------- */
+function renderMotw(){
+  const cur = weekStartOf(Date.now());
+  const weeks = [...new Set(weekly.map(r=>r.week_start))].filter(w=>w<cur).sort().reverse();
+  for(const w of weeks){
+    const rows = weekly.filter(r=>r.week_start===w && inScope(r.user_id) && nameOf(r.user_id));
+    const top = Math.max(0, ...rows.map(r=>r.points)); if(!top) continue;
+    const winners = rows.filter(r=>r.points===top).map(r=>esc(nameOf(r.user_id)));
+    $("motw").hidden=false;
+    $("motw").innerHTML = `${TROPHY}<div style="display:grid;gap:2px;min-width:0"><span class="note">Manager of the week · ${weekLabel(w)}</span>
+      <span class="who">${winners.join(" & ")}</span></div><span class="spacer"></span><span class="pts">${top}<span class="note" style="font:500 13px var(--body)"> pts</span></span>`;
+    return;
+  }
+  $("motw").hidden=true;
+}
+function renderHistory(){
+  const cur = weekStartOf(Date.now());
+  const weeks = [...new Set(weekly.map(r=>r.week_start))].filter(w=>w<cur).sort().reverse();
+  const wins = {}; let html = "";
+  for(const w of weeks){
+    const rows = weekly.filter(r=>r.week_start===w && inScope(r.user_id) && nameOf(r.user_id)).sort((a,b)=>b.points-a.points);
+    if(!rows.length || !rows[0].points) continue;
+    const top = rows[0].points, winners = rows.filter(r=>r.points===top);
+    winners.forEach(r=>{ wins[r.user_id]=(wins[r.user_id]||0)+1; });
+    const rest = rows.filter(r=>r.points<top).slice(0,3).map(r=>`${esc(nameOf(r.user_id))} ${r.points}`).join(" · ");
+    html += `<div class="weekcard"><span class="wk">${weekLabel(w)}</span>
+      <div class="win">${TROPHY}<strong>${winners.map(r=>esc(nameOf(r.user_id))).join(" & ")}</strong><span class="spacer"></span><span class="pts">${top}</span></div>
+      ${rest ? `<span class="rest">Next: ${rest}</span>` : ""}</div>`;
+  }
+  const leaders = Object.entries(wins).sort((a,b)=>b[1]-a[1]);
+  $("historyWrap").innerHTML = html
+    ? (leaders.length ? `<div class="winsrow">${leaders.map(([u,n])=>`<span>${esc(nameOf(u))} <b>×${n}</b></span>`).join("")}</div>` : "") + html
+    : `<div class="panel empty">No finished weeks yet. The first Manager of the week is crowned after Sunday's games (Moscow time).</div>`;
+}
 function renderLeague(){
+  renderScope(); renderMotw();
+  const scopeName = scope==="all" ? "" : (myLeagues.find(l=>l.id===scope)?.name || "");
+  $("tableTitle").textContent = period==="history" ? "Weekly winners" : period==="week" ? "This week" : "League table";
+  $("historyWrap").hidden = period!=="history"; $("tableWrap").hidden = period==="history";
+  if(period==="history"){ $("tableSub").textContent = (scopeName ? scopeName+": " : "") + "the manager with the most points each week, Monday to Sunday (Moscow time)."; renderHistory(); return; }
+  if(period==="week"){ renderWeekTable(scopeName); return; }
   $("ptsHead").textContent = settings.count_from==="season" ? "Points" : "League points";
   document.body.classList.toggle("season-mode", settings.count_from==="season");
   $("tableSub").textContent = settings.count_from==="season"
     ? "Each manager's points are the season points of their four clubs, counted from the start of the season. The table updates by itself when new KHL results arrive."
     : "League points count from the moment each manager saved their four clubs. The table updates by itself when new KHL results arrive.";
-  const rows = Object.values(squads).map(doc=>({doc,...squadPoints(doc)})).filter(r=>r.teams.length)
+  const rows = Object.values(squads).filter(doc=>inScope(doc.user_id)).map(doc=>({doc,...squadPoints(doc)})).filter(r=>r.teams.length)
     .sort((a,b)=>b.pts-a.pts || b.clubs-a.clubs || String(a.doc.saved_at).localeCompare(String(b.doc.saved_at)));
   const body = $("leagueBody");
-  if(!rows.length){ body.innerHTML = `<tr><td colspan="5" class="empty">No teams yet. Open <a href="#team">My team</a>, spend your coins and be the first on the table.</td></tr>`; return; }
+  if(!rows.length){ body.innerHTML = scope==="all" ? `<tr><td colspan="5" class="empty">No teams yet. Open <a href="#team">My team</a>, spend your coins and be the first on the table.</td></tr>`
+    : `<tr><td colspan="5" class="empty">Nobody in this league has a team yet. Share the invite link, and build yours on <a href="#team">My team</a>.</td></tr>`; return; }
   let lastPts=null, lastRank=0;
   body.innerHTML = rows.map((r,i)=>{
     const key = r.pts+"|"+r.clubs;   // tie on league points is broken by clubs total
@@ -405,6 +616,33 @@ function renderLeague(){
       <td><div class="mgr"><strong>${esc(r.doc.name)}${mine?' · you':''}</strong></div></td>
       <td><div class="chips">${chips}</div></td>
       <td class="num col-clubs"><span class="fp">${r.clubs}</span></td>
+      <td class="num"><span class="pts">${r.pts}</span></td></tr>`;
+  }).join("");
+}
+
+function renderWeekTable(scopeName){
+  const cur = weekStartOf(Date.now());
+  $("tableSub").textContent = (scopeName ? scopeName+" · " : "") + weekLabel(cur) + ": points your clubs earn in games that finish this week. A new week starts on Monday (Moscow time).";
+  $("ptsHead").textContent = "This week";
+  const per = {};   // user -> club -> pts
+  weekLog.filter(r=>r.week_start===cur).forEach(r=>{ (per[r.user_id] ||= {}); per[r.user_id][r.club] = (per[r.user_id][r.club]||0) + r.pts; });
+  const rows = Object.values(squads).filter(d=>inScope(d.user_id) && (d.teams||[]).length).map(d=>{
+    const mine = per[d.user_id] || {};
+    const clubsShown = [...new Set([...(d.teams||[]), ...Object.keys(mine)])].filter(c=>byCode[c]);
+    const pts = Object.values(mine).reduce((a,b)=>a+b,0);
+    return {doc:d, pts, clubsShown, mine};
+  }).sort((a,b)=>b.pts-a.pts || String(a.doc.name).localeCompare(String(b.doc.name)));
+  const body = $("leagueBody");
+  if(!rows.length){ body.innerHTML = `<tr><td colspan="5" class="empty">No teams in this league yet.</td></tr>`; return; }
+  let last=null, lastRank=0;
+  body.innerHTML = rows.map((r,i)=>{
+    const rank = r.pts===last ? lastRank : i+1; last=r.pts; lastRank=rank;
+    const me_ = me && r.doc.user_id===me.id;
+    const chips = r.clubsShown.map(c=>{ const v=r.mine[c]||0; const sold=!(r.doc.teams||[]).includes(c);
+      return `<span class="chip" title="${esc(byCode[c].name_en)}: ${v} pts this week${sold?' (sold)':''}" style="${sold?'opacity:.55':''}">${mono(c,true)}<b>${v}</b></span>`; }).join("");
+    return `<tr class="${rank===1&&r.pts>0?'lead ':''}${me_?'me':''}"><td class="rank">${rank}</td>
+      <td><div class="mgr"><strong>${esc(r.doc.name)}${me_?' · you':''}</strong></div></td>
+      <td><div class="chips">${chips}</div></td><td class="num col-clubs"></td>
       <td class="num"><span class="pts">${r.pts}</span></td></tr>`;
   }).join("");
 }
@@ -678,6 +916,17 @@ async function loadTable(name){
   if(name==="squads"){ const {data,error}=await sb.from("squads").select("*"); if(error) throw error; squads={}; data.forEach(r=>squads[r.user_id]=r);
     saved = me ? (squads[me.id]||null) : null; }
   if(name==="settings"){ const {data,error}=await sb.from("settings").select("*"); if(error) throw error; data.forEach(r=>settings[r.key]=r.value); }
+  if(name==="weekly"){   // optional: works before the upgrade SQL is run, just without weekly data
+    const a = await sb.from("weekly_points").select("*").order("week_start",{ascending:false}).limit(5000);
+    weekly = a.error ? [] : a.data;
+    const b = await sb.from("points_log").select("user_id,club,pts,week_start").eq("week_start", weekStartOf(Date.now())).limit(5000);
+    weekLog = b.error ? [] : b.data; }
+  if(name==="leagues"){
+    if(!me){ myLeagues=[]; leagueMembers={}; return; }
+    const a = await sb.from("leagues").select("*").order("created_at",{ascending:true});
+    const b = await sb.from("league_members").select("league_id,user_id");
+    myLeagues = a.error ? [] : a.data; leagueMembers = {};
+    (b.error ? [] : b.data).forEach(m=>{ (leagueMembers[m.league_id] ||= new Set()).add(m.user_id); }); }
 }
 function renderAll(){ renderStatus(); renderLeague(); renderTeam(); renderKhl(); renderLive(); if(openCode) openClub(openCode); }
 
@@ -688,8 +937,12 @@ async function boot(){
     $("statusText").textContent="Not connected"; return;
   }
   sb = supabase.createClient(CFG.supabaseUrl, CFG.supabaseAnonKey);
+  // invite link: ?join=CODE
+  const jc = new URLSearchParams(location.search).get("join");
+  if(jc && /^[A-Za-z0-9]{6}$/.test(jc)){ pendingJoin = jc.toUpperCase(); try{ localStorage.setItem("khl-join", pendingJoin); }catch(e){}
+    try{ history.replaceState(null, "", location.pathname + "#table"); }catch(e){} location.hash = "#table"; }
   try{
-    await Promise.all(["clubs","standings","matches","squads","settings"].map(loadTable));
+    await Promise.all(["clubs","standings","matches","squads","settings","weekly"].map(loadTable));
   }catch(err){
     showMsg("setupMsg","Could not load the league data. Check that you ran supabase/schema.sql and that config.js has the right keys. ("+(err.message||err)+")","err");
     return;
@@ -697,9 +950,10 @@ async function boot(){
   try{ const d=JSON.parse(store.get("khl-draft")||"null"); if(d){ draft=(d.teams||[]).filter(c=>byCode[c]).slice(0,SIZE); $("squadName").value=d.name||""; } }catch(e){}
   const {data:{session}} = await sb.auth.getSession();
   setUser(session?.user);
+  await loadTable("leagues"); renderLeague(); handlePendingJoin();
   sb.auth.onAuthStateChange((ev, s)=>{
     if(ev==="PASSWORD_RECOVERY"){ recovering=true; location.hash="#team"; }
-    if((s?.user?.id||null)!==(me?.id||null)) setUser(s?.user); else renderTeam();
+    if((s?.user?.id||null)!==(me?.id||null)){ setUser(s?.user); loadTable("leagues").then(()=>{ renderLeague(); handlePendingJoin(); }); } else renderTeam();
   });
   renderAll();
 
@@ -712,8 +966,26 @@ async function boot(){
     .on("postgres_changes",{event:"*",schema:"public",table:"standings"},reload("standings"))
     .on("postgres_changes",{event:"*",schema:"public",table:"matches"},reload("matches"))
     .on("postgres_changes",{event:"*",schema:"public",table:"settings"},reload("settings"))
+    .on("postgres_changes",{event:"*",schema:"public",table:"points_log"},reload("weekly"))
+    .on("postgres_changes",{event:"*",schema:"public",table:"league_members"},reload("leagues"))
     .subscribe();
 }
+/* ---------- install as an app ---------- */
+let installEvt = null;
+const isStandalone = () => matchMedia("(display-mode: standalone)").matches || navigator.standalone === true;
+const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+function showInstall(){
+  if(isStandalone() || store.get("khl-install-dismissed")) return;
+  if(installEvt){ $("installBtn").hidden=false; $("installNote").textContent="Install it for one-tap access, like any other app."; $("installBar").hidden=false; }
+  else if(isIOS){ $("installNote").innerHTML="In Safari, tap <b>Share</b>, then <b>Add to Home Screen</b>."; $("installBar").hidden=false; }
+}
+addEventListener("beforeinstallprompt", e=>{ e.preventDefault(); installEvt=e; showInstall(); });
+addEventListener("appinstalled", ()=>{ $("installBar").hidden=true; installEvt=null; });
+$("installBtn").addEventListener("click", async ()=>{ if(!installEvt) return; installEvt.prompt(); try{ await installEvt.userChoice; }catch(e){} installEvt=null; $("installBar").hidden=true; });
+$("installClose").addEventListener("click", ()=>{ store.set("khl-install-dismissed","1"); $("installBar").hidden=true; });
+showInstall();
+if("serviceWorker" in navigator && location.protocol === "https:"){ addEventListener("load", ()=>{ navigator.serviceWorker.register("sw.js").catch(()=>{}); }); }
+
 boot();
 </script>
 </body>
