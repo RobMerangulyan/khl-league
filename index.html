@@ -88,7 +88,11 @@ input[type=text]{font:500 15px var(--body);padding:9px 12px;border-radius:8px;bo
 .res.win i{background:var(--good-bg);color:var(--good);border-color:transparent}
 .res.loss i{color:var(--red)}
 .form{display:flex;gap:6px;flex-wrap:wrap}
-.chip{display:inline-grid;justify-items:center;gap:2px;min-width:36px}
+.chip{display:inline-grid;justify-items:center;gap:2px;min-width:36px;position:relative}
+.chip .cg{position:absolute;top:-5px;right:-6px;font:700 10px/1 var(--display);font-style:normal;color:#fff;background:var(--good);border-radius:7px;padding:2px 4px;box-shadow:0 0 0 2px var(--surface)}
+.chip .cg.zero{background:var(--muted)}
+.gain{display:block;font:700 14px var(--display);color:var(--muted);margin-top:2px}
+.gain.up{color:var(--good)}
 .chip b{font:700 13px var(--display);line-height:1}
 .livepts{display:inline-flex;align-items:baseline;gap:4px}
 .livepts strong{font:700 24px var(--display);line-height:1}
@@ -593,6 +597,8 @@ function renderLeague(){
   $("tableSub").textContent = settings.count_from==="season"
     ? "Each manager's points are the season points of their four clubs, counted from the start of the season. The table updates by itself when new KHL results arrive."
     : "League points count from the moment each manager saved their four clubs. The table updates by itself when new KHL results arrive.";
+  const lg = lastDayGains();
+  if(lg) $("tableSub").textContent += ` Green numbers show the points added on ${lg.label}.`;
   const rows = Object.values(squads).filter(doc=>inScope(doc.user_id)).map(doc=>({doc,...squadPoints(doc)})).filter(r=>r.teams.length)
     .sort((a,b)=>b.pts-a.pts || b.clubs-a.clubs || String(a.doc.saved_at).localeCompare(String(b.doc.saved_at)));
   const body = $("leagueBody");
@@ -603,13 +609,16 @@ function renderLeague(){
     const key = r.pts+"|"+r.clubs;   // tie on league points is broken by clubs total
     const rank = key===lastPts ? lastRank : i+1; lastPts=key; lastRank=rank;
     const mine = me && r.doc.user_id===me.id;
-    const chips = r.teams.map(c=>`<span class="chip" title="${esc(byCode[c]?.name_en)}: ${curFp(c)} pts this season">${mono(c,true)}<b>${curFp(c)}</b></span>`).join("");
+    const chips = r.teams.map(c=>{ const g = lg && c in lg.gains ? lg.gains[c] : null;
+      return `<span class="chip" title="${esc(byCode[c]?.name_en)}: ${curFp(c)} pts this season${g!==null?`, +${g} on ${lg.label}`:''}">${mono(c,true)}<b>${curFp(c)}</b>${g!==null?`<i class="cg${g?'':' zero'}">+${g}</i>`:''}</span>`; }).join("");
+    const played = lg ? r.teams.filter(c=>c in lg.gains) : [];
+    const added = played.reduce((s,c)=>s+lg.gains[c],0);
     return `<tr class="${rank===1?'lead ':''}${mine?'me':''}">
       <td class="rank">${rank}</td>
       <td><div class="mgr"><strong>${esc(r.doc.name)}${mine?' · you':''}</strong></div></td>
       <td><div class="chips">${chips}</div></td>
       <td class="num col-clubs"><span class="fp">${r.clubs}</span></td>
-      <td class="num"><span class="pts">${r.pts}</span></td></tr>`;
+      <td class="num"><span class="pts">${r.pts}</span>${played.length?`<span class="gain${added?' up':''}" title="Added on ${lg.label}">+${added}</span>`:''}</td></tr>`;
   }).join("");
 }
 
@@ -638,6 +647,16 @@ function renderWeekTable(scopeName){
       <td><div class="chips">${chips}</div></td><td class="num col-clubs"></td>
       <td class="num"><span class="pts">${r.pts}</span></td></tr>`;
   }).join("");
+}
+// points each club earned on the most recent day with finished games (Moscow date)
+function lastDayGains(){
+  const finals = matches.filter(m=>m.final && m.home_score!=null);
+  if(!finals.length) return null;
+  const day = finals.reduce((a,m)=>m.match_date>a?m.match_date:a, "");
+  const gains = {};
+  finals.filter(m=>m.match_date===day).forEach(m=>{ for(const c of [m.home,m.away]) gains[c]=(gains[c]||0)+outcome(m,c).pts; });
+  const label = new Date(day+"T12:00:00Z").toLocaleDateString(undefined,{weekday:"short",day:"numeric",month:"short",timeZone:"UTC"});
+  return {day, gains, label};
 }
 
 /* ---------- my team ---------- */
