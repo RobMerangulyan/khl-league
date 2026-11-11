@@ -58,6 +58,13 @@ def fail(msg: str) -> None:
     sys.exit(1)
 
 
+def skip(msg: str) -> None:
+    """khl.ru was briefly unreachable: skip this run without failing (the next run retries)."""
+    print(f"::warning::{msg}")
+    print(f"Skipped: {msg}")
+    sys.exit(0)
+
+
 def fetch_khl() -> tuple[dict, dict]:
     """Return (standings_data, calendar_data) from the khl.ru API."""
     with sync_playwright() as p:
@@ -67,17 +74,25 @@ def fetch_khl() -> tuple[dict, dict]:
             user_agent=("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
                         "(KHTML, like Gecko) Chrome/131.0 Safari/537.36"),
         )
-        try:
-            page.goto(KHL + "/standings/", wait_until="domcontentloaded", timeout=60_000)
-            page.wait_for_function("window.BX && BX.message && BX.message('bitrix_sessid')", timeout=60_000)
-        except Exception as exc:  # noqa: BLE001
-            browser.close()
-            fail(f"Could not open khl.ru ({exc}). The site may be down or blocking automated visits.")
-        standings = page.evaluate(FETCH_JS, "standings/regular")
-        calendar = page.evaluate(FETCH_JS, "calendar/list")
+        last_error = None
+        for attempt in (1, 2):           # khl.ru is sometimes slow for a moment: try twice
+            try:
+                page.goto(KHL + "/standings/", wait_until="domcontentloaded", timeout=40_000)
+                page.wait_for_function("window.BX && BX.message && BX.message('bitrix_sessid')", timeout=30_000)
+                standings = page.evaluate(FETCH_JS, "standings/regular")
+                calendar = page.evaluate(FETCH_JS, "calendar/list")
+                last_error = None
+                break
+            except Exception as exc:  # noqa: BLE001
+                last_error = exc
         browser.close()
+        if last_error is not None:
+            skip(f"khl.ru did not respond in time ({str(last_error).splitlines()[0]}); trying again next run.")
 
     for name, resp in (("standings", standings), ("calendar", calendar)):
+        err = resp.get("error") if isinstance(resp, dict) else None
+        if err and (str(err).startswith("http_5") or err == "no_session_token"):
+            skip(f"khl.ru had a temporary problem with the {name} request ({err}); trying again next run.")
         if not isinstance(resp, dict) or resp.get("error") or resp.get("status") != "success":
             fail(f"khl.ru refused the {name} request: {resp if not isinstance(resp, dict) else resp.get('error') or resp.get('errors')}")
     return standings["data"], calendar["data"]
