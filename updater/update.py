@@ -65,8 +65,9 @@ def skip(msg: str) -> None:
     sys.exit(0)
 
 
-def fetch_khl() -> tuple[dict, dict]:
-    """Return (standings_data, calendar_data) from the khl.ru API."""
+def fetch_khl() -> tuple[dict | None, dict | None]:
+    """Return (standings_data, calendar_data) from the khl.ru API; either may be None if khl.ru kept failing."""
+    import time
     with sync_playwright() as p:
         browser = p.chromium.launch(headless=True)
         page = browser.new_page(
@@ -79,23 +80,42 @@ def fetch_khl() -> tuple[dict, dict]:
             try:
                 page.goto(KHL + "/standings/", wait_until="domcontentloaded", timeout=40_000)
                 page.wait_for_function("window.BX && BX.message && BX.message('bitrix_sessid')", timeout=30_000)
-                standings = page.evaluate(FETCH_JS, "standings/regular")
-                calendar = page.evaluate(FETCH_JS, "calendar/list")
                 last_error = None
                 break
             except Exception as exc:  # noqa: BLE001
                 last_error = exc
-        browser.close()
         if last_error is not None:
+            browser.close()
             skip(f"khl.ru did not respond in time ({str(last_error).splitlines()[0]}); trying again next run.")
 
-    for name, resp in (("standings", standings), ("calendar", calendar)):
-        err = resp.get("error") if isinstance(resp, dict) else None
-        if err and (str(err).startswith("http_5") or err == "no_session_token"):
-            skip(f"khl.ru had a temporary problem with the {name} request ({err}); trying again next run.")
-        if not isinstance(resp, dict) or resp.get("error") or resp.get("status") != "success":
-            fail(f"khl.ru refused the {name} request: {resp if not isinstance(resp, dict) else resp.get('error') or resp.get('errors')}")
-    return standings["data"], calendar["data"]
+        def ask(path: str, name: str):
+            """Call one khl.ru API, retrying temporary server errors (502/504) a few times."""
+            resp = None
+            for attempt in range(4):
+                if attempt:
+                    time.sleep(6 * attempt)
+                try:
+                    resp = page.evaluate(FETCH_JS, path)
+                except Exception as exc:  # noqa: BLE001
+                    resp = {"error": "http_5xx " + str(exc).splitlines()[0]}
+                err = resp.get("error") if isinstance(resp, dict) else None
+                if not (err and (str(err).startswith("http_5") or err == "no_session_token")):
+                    break
+            err = resp.get("error") if isinstance(resp, dict) else None
+            if err and (str(err).startswith("http_5") or err == "no_session_token"):
+                print(f"::warning::khl.ru kept failing the {name} request ({err}); skipped it this run.")
+                return None
+            if not isinstance(resp, dict) or resp.get("error") or resp.get("status") != "success":
+                browser.close()
+                fail(f"khl.ru refused the {name} request: {resp if not isinstance(resp, dict) else resp.get('error') or resp.get('errors')}")
+            return resp["data"]
+
+        standings = ask("standings/regular", "standings")
+        calendar = ask("calendar/list", "calendar")
+        browser.close()
+    if standings is None and calendar is None:
+        skip("khl.ru kept failing both requests; trying again next run.")
+    return standings, calendar
 
 
 def parse_standings(data: dict) -> list[dict]:
@@ -230,8 +250,8 @@ class Supabase:
 def main() -> None:
     db = Supabase()
     standings_raw, calendar_raw = fetch_khl()
-    standings = parse_standings(standings_raw)
-    matches = parse_matches(calendar_raw)
+    standings = parse_standings(standings_raw) if standings_raw is not None else []
+    matches = parse_matches(calendar_raw) if calendar_raw is not None else []
 
     # Safety check: games played never goes down during a season.
     old = {r["code"]: r["gp"] for r in db.select("standings", "select=code,gp")}
@@ -242,7 +262,7 @@ def main() -> None:
     # Only send matches that are new or changed, to keep live updates light.
     fields = ("match_date", "time_msk", "kickoff", "home", "away", "home_score", "away_score", "result_type", "final",
               "live", "live_home", "live_away", "live_status")
-    existing = {r["id"]: r for r in db.select("matches", "select=id," + ",".join(fields))}
+    existing = {r["id"]: r for r in db.select("matches", "select=id," + ",".join(fields))} if matches else {}
 
     def same(new: dict, old: dict | None) -> bool:
         if old is None:
@@ -257,7 +277,8 @@ def main() -> None:
 
     changed = [m for m in matches if not same(m, existing.get(m["id"]))]
 
-    db.upsert("standings", standings, "code")
+    if standings:
+        db.upsert("standings", standings, "code")
     if changed:
         db.upsert("matches", changed, "id")
     played = sum(1 for m in matches if m["final"])
