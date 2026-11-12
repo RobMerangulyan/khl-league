@@ -170,11 +170,18 @@ def parse_matches(data: dict) -> list[dict]:
                     kickoff = dt.datetime(d.year, d.month, d.day, hh, mm, tzinfo=MSK).isoformat()
                 except ValueError:
                     pass
-                final = g.get("approved") == 1 and g.get("homeScore") is not None
-                # khl.ru marks games in progress with isOnline and puts the live score in "online".
                 online = g.get("online") if isinstance(g.get("online"), dict) else {}
+                approved = g.get("approved") == 1 and g.get("homeScore") is not None
+                # Right after the final horn khl.ru marks a game "Завершен" (finished) with the final
+                # score in "online", and confirms it officially ("approved") only later.
+                ended = (not approved) and online.get("homeScore") is not None and online.get("visitorScore") is not None \
+                    and not g.get("isOnline") and ("заверш" in str(online.get("status") or "").lower() or g.get("win"))
+                final = approved or ended
+                hs = g.get("homeScore") if approved else online.get("homeScore")
+                vs = g.get("visitorScore") if approved else online.get("visitorScore")
+                # khl.ru marks games in progress with isOnline and puts the live score in "online".
                 live = (not final) and bool(g.get("isOnline")) and online.get("homeScore") is not None
-                ots = (g.get("ots") or "").upper()
+                ots = (g.get("ots") or online.get("ots") or "").upper()
                 out.append({
                     "id": int(g["id"]),
                     "match_date": g.get("date") or date_str,
@@ -182,8 +189,8 @@ def parse_matches(data: dict) -> list[dict]:
                     "kickoff": kickoff,
                     "home": home,
                     "away": away,
-                    "home_score": int(g["homeScore"]) if final else None,
-                    "away_score": int(g["visitorScore"]) if final else None,
+                    "home_score": int(hs) if final else None,
+                    "away_score": int(vs) if final else None,
                     "result_type": (ots if ots in ("OT", "SO") else "R") if final else None,
                     "final": final,
                     "live": live,
